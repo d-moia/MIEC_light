@@ -30,14 +30,6 @@
 % by the Free Software Foundation, either version 3 of the License, or
 % (at your option) any later version.
 %--------------------------------------------------------------------------%--------------------------------------------------------------------------
-% LICENSE
-% Copyright (C) 2025  Davide Moia
-% Max Planck Institute for Solid State Research
-% This program is free software: you can redistribute it and/or modify
-% it under the terms of the GNU Affero General Public License as published
-% by the Free Software Foundation, either version 3 of the License, or
-% (at your option) any later version.
-%--------------------------------------------------------------------------
 
 %Directory and Filename
 Directory = 'Directory\';
@@ -148,7 +140,7 @@ K_n_v = K_p_v*ni^2;                     %Pseudo mass action constant (at equilib
 vth = 1e7;                              %Electrons and holes thermal velocity
 
 Gamma_p_i = 1e9;                           %Hole trapping rate by an interstitial normalized by the radiative rate evaluated at equilibrium and at P(I2)i Gamma_p_i = kf_p_i*KaF^0.5/(krad*ni)
-CrossSection_Iim_p = Gamma_p_i*krad*ni/vth/KaF^0.5;         %Reference value for the cross section realted with capture of a hole by a Ii'
+CrossSection_Iim_p = Gamma_p_i*krad*ni/vth/KaF^0.5;         %Reference value for the cross section related with capture of a hole by a Ii'
 CaptureCoeff_Iim_p = vth*CrossSection_Iim_p*time_;
 
 Gamma_n_v = 1e9;                           %Electron trapping rate by vacancies normalized by the radiative rate evaluated at equilibrium and at P(I2)i Gamma_n_v = kf_p_v*Kv*P(I2)^-0.5/(krad*ni) 
@@ -242,7 +234,9 @@ end
 xsolall = zeros(N,6);
 xguessall = zeros(N,6);
 
-%Paramater kn introduced to improve initial guess for n, if needed
+%Paramater kn introduced to improve initial guess for n, if needed. kn is
+%a guess of how much larger is the electron concentration under light than 
+%in the dark for the lowest pI2
 kn = 1;
 p0 = max(p0dark,min([Gext/krad/n0dark/kn/Rec_Model(1),Gext*taup/Rec_Model(2),Gext/(n0dark*kn)^2/(Cn)/Rec_Model(3)]));
 n0 = n0dark*kn;
@@ -331,11 +325,11 @@ Unv = kb_n_v*xsolall(:,3).*xsolall(:,2)/conc_ - conc_*kf_n_v*K_sg_v*pI2'.^-0.5;
 % xlabel('P(I_2) (bar)')
 % ylabel('Net recombination rate')
 
-GF = Uni - Upi;
-GFx = -GF;
+GaF = Uni - Upi;
+GaFx = -GaF;
 
 % figure(6)
-% loglog(pI2,GF,'g',pI2,GFx,'k')
+% loglog(pI2,GaF,'g',pI2,GaFx,'k')
 % xlabel('P(I_2) (bar)')
 % ylabel('Effective ionic defect generation rate')
 
@@ -375,12 +369,46 @@ Info = ['Suns = ' num2str(SunsEq) newline 'Gext = ' num2str(Gext*conc_) newline 
 fprintf(fid, Info);
 fclose(fid);
 
-dlmwrite([NewDirectory, Filename,'_DefConc_light.txt'],[downsample(log10(pI2'),ds) downsample(log10(xsolall),ds)]);
-dlmwrite([NewDirectory, Filename,'_Deltamu.txt'],[downsample(log10(pI2'),ds) downsample(deltamu_p,ds) downsample(deltamu_n,ds) downsample(deltamu_VI,ds) downsample(deltamu_Ii,ds) downsample(deltamu_p-deltamu_VI,ds) downsample(-deltamu_n-deltamu_VI,ds)]);
-dlmwrite([NewDirectory, Filename,'_QFLS.txt'],[downsample(log10(pI2'),ds) downsample(QFLS,ds)]);
-dlmwrite([NewDirectory, Filename,'_Deltamu_ion.txt'],[downsample(log10(pI2'),ds) downsample(Deltamuion_light,ds)]);
-dlmwrite([NewDirectory, Filename,'_Recombination.txt'],[downsample(log10(pI2'),ds) downsample(log10(Urad),ds) downsample(log10(USRH),ds) downsample(log10(UAug),ds) i_coeff*downsample(log10(Upi),ds) v_coeff*downsample(log10(Upv),ds)]); 
-dlmwrite([NewDirectory, Filename,'_EffectiveIonicGeneration.txt'],[downsample(log10(pI2'),ds) downsample(GF,ds) downsample(GFx,ds)]); 
+filename = [NewDirectory, Filename,'_DefConc_light.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s,%s,%s,%s,%s,%s\n','log10(pI2/bar)','log10(p/cm^-3)','log10(n/cm^-3)','log10([V_I^.]/cm^-3)','log10([I_i^m]/cm^-3)','log10([V_I^x]/cm^-3)','log10([I_i^x]/cm^-3)');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(log10(xsolall),ds)],'-append');
+
+filename = [NewDirectory, Filename,'_Deltamu.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s,%s,%s,%s,%s,%s\n','log10(pI2/bar)','deltamu_p/eV','deltamu_n/eV','deltamu_V_I^./eV','deltamu_I_i^m/eV','deltamu_Ip/eV','deltamu_In/eV');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(deltamu_p,ds) downsample(deltamu_n,ds) downsample(deltamu_VI,ds) downsample(deltamu_Ii,ds) downsample(deltamu_p-deltamu_VI,ds) downsample(-deltamu_n-deltamu_VI,ds)],'-append');
+
+filename = [NewDirectory, Filename,'_QFLS.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s\n','log10(pI2/bar)','QFLS/eV');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(QFLS,ds)],'-append');
+
+filename = [NewDirectory, Filename,'_Deltamu_ion.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s\n','log10(pI2/bar)','QFLS/eV');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(Deltamuion_light,ds)],'-append');
+
+filename = [NewDirectory, Filename,'_Recombination.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s,%s,%s,%s,%s\n','log10(pI2/bar)','Urad/cm^-3 s^-1','USRH/cm^-3 s^-1','UAug/cm^-3 s^-1','Upi/cm^-3 s^-1','Upv/cm^-3 s^-1');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(log10(Urad),ds) downsample(log10(USRH),ds) downsample(log10(UAug),ds) i_coeff*downsample(log10(Upi),ds) v_coeff*downsample(log10(Upv),ds)],'-append');
+
+filename = [NewDirectory, Filename,'_EffectiveIonicGeneration.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s,%s\n','log10(pI2/bar)','G_aF/cm^-3 s^-1','G_aF^x/cm^-3 s^-1');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(GaF,ds) downsample(GaFx,ds)],'-append');
+
 if Include_dark == 1
-    dlmwrite([NewDirectory, Filename,'_DefConc_darkequil.txt'],[downsample(log10(pI2'),ds) downsample(log10(xsolall_dark),ds)]);
+    filename = [NewDirectory, Filename,'_DefConc_darkequil.txt'];
+    fid = fopen(filename, 'w');
+    fprintf(fid, '%s,%s,%s,%s,%s,%s,%s\n','log10(pI2/bar)','log10(p/cm^-3)','log10(n/cm^-3)','log10([V_I^.]/cm^-3)','log10([I_i^m]/cm^-3)','log10([V_I^x]/cm^-3)','log10([I_i^x]/cm^-3)');
+    fclose(fid);
+    dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(log10(xsolall_dark),ds)],'-append');
 end
