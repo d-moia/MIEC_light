@@ -55,7 +55,7 @@ color = {'r--' 'b--' 'g--' 'k--';'r.' 'b.' 'g.' 'k.'};
 %Number of points N (values for pI2), ds is used later to downsample the data, so that all files have 401 lines
 %By changing ds, the total number of calculations can be  varied. This can
 %sometimes help with convergence.
-ds = 2;                
+ds = 4;                
 N = ds*401;
 
 %Values for normalization. These values can be varied to improve
@@ -132,11 +132,11 @@ K_n_v = K_p_v*ni^2;                     %Pseudo mass action constant (at equilib
 vth = 1e7;                              %Electrons and holes thermal velocity
 
 Gamma_p_i = 1e-2;                           %Parameter describing the ratio of the hole trapping rate due to redox with interstitials and the radiative rate evaluated at equilibrium and at P(I2)i Gamma_p_i = kf_p_i*KaF^0.5/(krad*ni)
-CrossSection_Iim_p = Gamma_p_i*krad*ni/vth/KaF^0.5;         %Reference value for the cross section realated with capture of a hole by a Ii'
+CrossSection_Iim_p = Gamma_p_i*krad*ni/vth/KaF^0.5;         %Reference value for the cross section related with capture of a hole by a Ii'
 CaptureCoeff_Iim_p = vth*CrossSection_Iim_p*time_;
 
 Gamma_n_v = 1e-2;                           %Parameter describing the ratio of the electron trapping rate due to redox with vacancies and the radiative rate evaluated at equilibrium and at P(I2)i Gamma_n_v = kf_p_v*Kv*P(I2)^-0.5/(krad*ni) 
-CrossSection_VIp_n = Gamma_n_v*krad*ni/vth/KaF^0.5;         %Reference value for the cross section realated with capture of an electron by a VI.
+CrossSection_VIp_n = Gamma_n_v*krad*ni/vth/KaF^0.5;         %Reference value for the cross section related with capture of an electron by a VI.
 CaptureCoeff_VIp_n = vth*CrossSection_VIp_n*time_;
 
 %Gamma_I indicates the relative tendency of intestitials (i) or vacancies (v) to react with
@@ -224,8 +224,10 @@ end
 xsolall = zeros(N,4);
 xguessall = zeros(N,4);
 
-%Paramater kn introduced to improve initial guess for n, if needed
-kn = 1;
+%Paramater kn introduced to improve initial guess for n, if needed. kn is
+%a guess of how much larger is the electron concentration under light than 
+%in the dark for the lowest pI2
+kn = 10;
 p0 = max(p0dark,min([Gext/krad/n0dark/kn/Rec_Model(1),Gext*taup/Rec_Model(2),Gext/(n0dark*kn)^2/(Cn)/Rec_Model(3)]));
 n0 = n0dark*kn;
 VI0 = VI0dark;
@@ -284,12 +286,12 @@ semilogx(pI2,Deltamuion_light,'c')
 xlabel('P(I_2) (bar)')
 ylabel('QFLSion')
 
-% % Quasi-chemical potential of iodine defined as mu_p - mu~_VI = Ap*log10(p/VI) 
-% % and -mu_n - mu~_VI = An*log10(p/VI) in the dilute limit
-% deltamu_p = Vth*log(xsolall(:,1)./xsolall_dark(:,1));
-% deltamu_n = Vth*log(xsolall(:,2)./xsolall_dark(:,2));
-% deltamu_VI = Vth*log(xsolall(:,3)./xsolall_dark(:,3));
-% deltamu_Ii = Vth*log(xsolall(:,4)./xsolall_dark(:,4));
+% Quasi-chemical potential of iodine defined as mu_p - mu~_VI = Ap*log10(p/VI) 
+% and -mu_n - mu~_VI = An*log10(p/VI) in the dilute limit
+deltamu_p = Vth*log(xsolall(:,1)./xsolall_dark(:,1));
+deltamu_n = Vth*log(xsolall(:,2)./xsolall_dark(:,2));
+deltamu_VI = Vth*log(xsolall(:,3)./xsolall_dark(:,3));
+deltamu_Ii = Vth*log(xsolall(:,4)./xsolall_dark(:,4));
 % 
 % figure(4)
 % semilogx(pI2,deltamu_p,'r',pI2,deltamu_n,'b',pI2,deltamu_VI,'g',pI2,deltamu_Ii,'k')
@@ -297,21 +299,21 @@ ylabel('QFLSion')
 % ylabel('deltamu')
 
 % %Net recombination terms
-% Urad = (xsolall(:,2).*xsolall(:,1)-(conc_*ni)^2)*(krad/conc_);
-% USRH = (xsolall(:,2).*xsolall(:,1)-(conc_*ni)^2)./((taup)*(xsolall(:,2)+conc_*n1)+(taun)*(xsolall(:,1)+conc_*p1));
-% UAug = (xsolall(:,2).*xsolall(:,1)-(conc_*ni)^2).*(Cp/conc_^2*xsolall(:,1) + Cn/conc_^2*xsolall(:,2));
-% 
-% Upi = (kf_p_i/conc_*xsolall(:,1).*xsolall(:,4) - kb_p_i.*(pI2'.^0.5)/K_sg_i*conc_);
-% Upv = (kf_p_v*K_sg_v*xsolall(:,1).*(pI2'.^-0.5) - kb_p_v*xsolall(3));
-% Uni = kb_n_i*xsolall(:,2).*pI2'.^0.5/K_sg_i - kf_n_i*xsolall(:,4);
-% Unv = kb_n_v*xsolall(:,3).*xsolall(:,2)/conc_ - conc_*kf_n_v*K_sg_v*pI2'.^-0.5;
+Urad = (xsolall(:,2).*xsolall(:,1)-(conc_*ni)^2)*(krad/conc_);
+USRH = (xsolall(:,2).*xsolall(:,1)-(conc_*ni)^2)./((taup)*(xsolall(:,2)+conc_*n1)+(taun)*(xsolall(:,1)+conc_*p1));
+UAug = (xsolall(:,2).*xsolall(:,1)-(conc_*ni)^2).*(Cp/conc_^2*xsolall(:,1) + Cn/conc_^2*xsolall(:,2));
+
+Upi = (kf_p_i/conc_*xsolall(:,1).*xsolall(:,4) - kb_p_i.*(pI2'.^0.5)/K_sg_i*conc_);
+Upv = (kf_p_v*K_sg_v*xsolall(:,1).*(pI2'.^-0.5) - kb_p_v*xsolall(3));
+Uni = kb_n_i*xsolall(:,2).*pI2'.^0.5/K_sg_i - kf_n_i*xsolall(:,4);
+Unv = kb_n_v*xsolall(:,3).*xsolall(:,2)/conc_ - conc_*kf_n_v*K_sg_v*pI2'.^-0.5;
 % figure(5)
 % loglog(pI2,Urad,'k',pI2,USRH,'m',pI2,UAug,'g',pI2,Upi,'r--',pI2,Upv,'r.',pI2,Upv+Upi,'rs',pI2,Uni,'b--',pI2,Unv,'b.',pI2,Unv+Uni,'bx')
 % xlabel('P(I_2) (bar)')
 % ylabel('Net recombination rates')
 
-% GaF = Uni - Upi;
-% GaFx = -GaF;
+GaF = Uni - Upi;
+GaFx = -GaF;
 % 
 % figure(6)
 % semilogx(pI2,GaF,'g',pI2,GaFx,'k')
@@ -349,12 +351,46 @@ Info = ['Suns = ' num2str(SunsEq) newline 'Gext = ' num2str(Gext*conc_) newline 
 fprintf(fid, Info);
 fclose(fid);
 
-dlmwrite([NewDirectory, Filename,'_sgeq_DefConc_light.txt'],[downsample(log10(pI2'),ds) downsample(log10(xsolall),ds)]);
-dlmwrite([NewDirectory, Filename,'_sgeq_Deltamu.txt'],[downsample(log10(pI2'),ds) downsample(deltamu_p,ds) downsample(deltamu_n,ds) downsample(deltamu_VI,ds) downsample(deltamu_Ii,ds) downsample(deltamu_p-deltamu_VI,ds) downsample(-deltamu_n-deltamu_VI,ds)]);
-dlmwrite([NewDirectory, Filename,'_sgeq_QFLS.txt'],[downsample(log10(pI2'),ds) downsample(QFLS,ds)]);
-dlmwrite([NewDirectory, Filename,'_sgeq_Deltamu_ion.txt'],[downsample(log10(pI2'),ds) downsample(Deltamuion_light,ds)]);
-dlmwrite([NewDirectory, Filename,'_sgeq_Recombination.txt'],[downsample(log10(pI2'),ds) downsample(log10(Urad),ds) downsample(log10(USRH),ds) downsample(log10(UAug),ds) i_coeff*downsample(log10(Upi),ds) v_coeff*downsample(log10(Upv),ds)]);
-dlmwrite([NewDirectory, Filename,'_sgeq_EffectiveIonicGeneration.txt'],[downsample(log10(pI2'),ds) downsample(GaF,ds) downsample(GaFx,ds)]); 
+filename = [NewDirectory, Filename,'_DefConc_light.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s,%s,%s,%s\n','log10(pI2/bar)','log10(p/cm^-3)','log10(n/cm^-3)','log10([V_I^.]/cm^-3)','log10([I_i^m]/cm^-3)');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(log10(xsolall),ds)],'-append');
+
+filename = [NewDirectory, Filename,'_Deltamu.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s,%s,%s,%s,%s,%s\n','log10(pI2/bar)','deltamu_p/eV','deltamu_n/eV','deltamu_V_I^./eV','deltamu_I_i^m/eV','deltamu_Ip/eV','deltamu_In/eV');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(deltamu_p,ds) downsample(deltamu_n,ds) downsample(deltamu_VI,ds) downsample(deltamu_Ii,ds) downsample(deltamu_p-deltamu_VI,ds) downsample(-deltamu_n-deltamu_VI,ds)],'-append');
+
+filename = [NewDirectory, Filename,'_QFLS.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s\n','log10(pI2/bar)','QFLS/eV');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(QFLS,ds)],'-append');
+
+filename = [NewDirectory, Filename,'_Deltamu_ion.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s\n','log10(pI2/bar)','QFLS/eV');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(Deltamuion_light,ds)],'-append');
+
+filename = [NewDirectory, Filename,'_Recombination.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s,%s,%s,%s,%s\n','log10(pI2/bar)','Urad/cm^-3 s^-1','USRH/cm^-3 s^-1','UAug/cm^-3 s^-1','Upi/cm^-3 s^-1','Upv/cm^-3 s^-1');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(log10(Urad),ds) downsample(log10(USRH),ds) downsample(log10(UAug),ds) i_coeff*downsample(log10(Upi),ds) v_coeff*downsample(log10(Upv),ds)],'-append');
+
+filename = [NewDirectory, Filename,'_EffectiveIonicGeneration.txt'];
+fid = fopen(filename, 'w');
+fprintf(fid, '%s,%s,%s\n','log10(pI2/bar)','G_aF/cm^-3 s^-1','G_aF^x/cm^-3 s^-1');
+fclose(fid);
+dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(GaF,ds) downsample(GaFx,ds)],'-append');
+
 if Include_dark == 1
-    dlmwrite([NewDirectory, Filename,'_sgeq_DefConc_darkequil.txt'],[downsample(log10(pI2'),ds) downsample(log10(xsolall_dark),ds)]);
+    filename = [NewDirectory, Filename,'_DefConc_darkequil.txt'];
+    fid = fopen(filename, 'w');
+    fprintf(fid, '%s,%s,%s,%s,%s\n','log10(pI2/bar)','log10(p/cm^-3)','log10(n/cm^-3)','log10([V_I^.]/cm^-3)','log10([I_i^m]/cm^-3)');
+    fclose(fid);
+    dlmwrite(filename,[downsample(log10(pI2'),ds) downsample(log10(xsolall_dark),ds)],'-append');
 end
