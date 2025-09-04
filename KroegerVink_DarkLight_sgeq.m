@@ -55,7 +55,7 @@ color = {'r--' 'b--' 'g--' 'k--';'r.' 'b.' 'g.' 'k.'};
 %Number of points N (values for pI2), ds is used later to downsample the data, so that all files have 401 lines
 %By changing ds, the total number of calculations can be  varied. This can
 %sometimes help with convergence.
-ds = 4;                
+ds = 1;                
 N = ds*401;
 
 %Values for normalization. These values can be varied to improve
@@ -111,21 +111,21 @@ E_Ii = 0.2979;
 E_VI = 0.2979;
 
 %Mass-action constants for the solid-gas exchange at the surface. The
-%concentration of neutral defects (I_i^x at PI2_IP and V_I^x at PI2_NI) are
+%concentration of neutral defects (I_i^x and V_I^x) at PI2i are
 %calculated based on the energy position of the redox level associated with 
-%each defect.
-Iix_IP = KaF/sqrt(NcNv/conc_^2)*exp(E_Ii/Vth);
-K_sg_i = sqrt(PI2_IP)/Iix_IP;            %K_sg_i = P(I2)^0.5/[I_i^x] defined at the boundary I P regions
-VIx_NI = KaF/sqrt(NcNv/conc_^2)*exp(E_VI/Vth);
-K_sg_v = sqrt(PI2_NI)*VIx_NI;           %K_sg_v = P(I2)^0.5*[V_I^x] defined at the boundary N I regions
+%each defect considering an electron and hole concentration equal to ni.
+Iix_i = sqrt(KaF)*ni/sqrt(NcNv/conc_^2)*exp(E_Ii/Vth);
+K_sg_i = sqrt(PI2i)/Iix_i;            %K_sg_i = P(I2)^0.5/[I_i^x] defined at the boundary I P regions
+VIx_i = sqrt(KaF)*ni/sqrt(NcNv/conc_^2)*exp(E_VI/Vth);
+K_sg_v = sqrt(PI2i)*VIx_i;           %K_sg_v = P(I2)^0.5*[V_I^x] defined at the boundary N I regions
 
 %Process (i) is the redox with an iodide interstitial 
 K_p_i = sqrt(PI2_IP)/KaF/K_sg_i;            %Pseudo mass action constant (at equilibrium), for the Ii'/Iix mediated by holes K_p_i = [Iix]/p/[Ii'] = pI2^0.5/Ki/p/[Ii']
-K_n_i = K_p_i*ni^2;                     %Pseudo mass action constant (at equilibrium), for the Ii'/Iix mediated by electrons  K_n_i = [Iix]*n/[Ii'] = pI2^0.5*n/[Ii']/Ki = KI_p_i*ni^2 (from detailed balance)
+K_n_i = K_p_i*ni^2;                     %Pseudo mass action constant (at equilibrium), for the Ii'/Iix mediated by electrons  K_n_i = [Iix]*n/[Ii'] = pI2^0.5*n/[Ii']/Ki = K_p_i*ni^2 (from detailed balance)
 
 %Process (v) is the redox with an iodide vacancy  
 K_p_v = sqrt(PI2_IP)/K_sg_v;                %Pseudo mass action constant (at equilibrium), for the VIx/VI mediated by holes K_p_v = [VI.]/p/[VIx] = [VI.]pI2^0.5/Kv/p
-K_n_v = K_p_v*ni^2;                     %Pseudo mass action constant (at equilibrium), for the VIx/VI mediated by electrons  K_n_v = [VI.]/p/[VIx] = [VI.]pI2^0.5/Kv/p = KI_h*ni^2 (from detailed balance)
+K_n_v = K_p_v*ni^2;                     %Pseudo mass action constant (at equilibrium), for the VIx/VI mediated by electrons  K_n_v = [VI.]*n/[VIx] = K_p_v*ni^2 (from detailed balance)
 
 vth = 1e7;                              %Electrons and holes thermal velocity
 
