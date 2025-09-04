@@ -33,7 +33,7 @@
 
 %Directory and Filename
 Directory = 'Directory\';
-newFolder = 'Full-kinetic';
+newFolder = '250903_Full-kinetic';
 [void] = mkdir(Directory,newFolder);
 Filename = '\Filename';
 NewDirectory = [Directory newFolder];
@@ -55,7 +55,7 @@ color = {'r--' 'b--' 'g--' 'k--' 'y--' 'm--';'r.' 'b.' 'g.' 'k.' 'y.' 'm.'};
 %Number of points N (values for pI2), ds is used later to downsample the data, so that all files have 401 lines
 %By changing ds, the total number of calculations can be  varied. This can
 %sometimes help with convergence.
-ds = 4;                
+ds = 1;                
 N = ds*401;
 
 %Values for normalization. These values can be varied to improve
@@ -111,16 +111,16 @@ E_Ii = 0.2979;
 E_VI = 0.2979;
 
 %Mass-action constants for the solid-gas exchange at the surface. The
-%concentration of neutral defects (I_i^x at PI2_IP and V_I^x at PI2_NI) are
+%concentration of neutral defects (I_i^x and V_I^x) at PI2i are
 %calculated based on the energy position of the redox level associated with 
-%each defect.
-Iix_IP = KaF/sqrt(NcNv/conc_^2)*exp(E_Ii/Vth);
-K_sg_i = sqrt(PI2_IP)/Iix_IP;            %K_sg_i = P(I2)^0.5/[I_i^x] defined at the boundary I P regions
-VIx_NI = KaF/sqrt(NcNv/conc_^2)*exp(E_VI/Vth);
-K_sg_v = sqrt(PI2_NI)*VIx_NI;           %K_sg_v = P(I2)^0.5*[V_I^x] defined at the boundary N I regions
+%each defect considering an electron and hole concentration equal to ni.
+Iix_i = sqrt(KaF)*ni/sqrt(NcNv/conc_^2)*exp(E_Ii/Vth);
+K_sg_i = sqrt(PI2i)/Iix_i;            %K_sg_i = P(I2)^0.5/[I_i^x] defined at the boundary I P regions
+VIx_i = sqrt(KaF)*ni/sqrt(NcNv/conc_^2)*exp(E_VI/Vth);
+K_sg_v = sqrt(PI2i)*VIx_i;           %K_sg_v = P(I2)^0.5*[V_I^x] defined at the boundary N I regions
 
 %Excorporation rate constants for the solid gas exchange of iodine via neutral interstitials or via neutral vacancies 
-kf_sg_i = 1e10/(sqrt(PI2i)/K_sg_i);  %Normalized so that the prefactor corresponds to the actual rate Rf_sg_i in cm^-3 s^-1 at P(I2)i
+kf_sg_i = 1e10/(sqrt(PI2i)/K_sg_i);  %Normalized so that the prefactor (the numerical value e.g. 1e10) corresponds to the actual rate Rf_sg_i in cm^-3 s^-1 at P(I2)i (here the rate is concentration normalised, so it is in fact s^-1)
 kf_sg_v = 1e10;                      %Rf_sg_v = kf_sg_v
 
 %Incorporation rate constants
@@ -129,26 +129,26 @@ kb_sg_v = kf_sg_v/K_sg_v;
 
 %Psudo mass action constants associated with the redox with an iodide interstitial 
 K_p_i = sqrt(PI2_IP)/KaF/K_sg_i;            %Pseudo mass action constant (at equilibrium), for the Ii'/Iix mediated by holes K_p_i = [Iix]/p/[Ii'] = pI2^0.5/Ki/p/[Ii']
-K_n_i = K_p_i*ni^2;                     %Pseudo mass action constant (at equilibrium), for the Ii'/Iix mediated by electrons  K_n_i = [Iix]*n/[Ii'] = pI2^0.5*n/[Ii']/Ki = KI_p_i*ni^2 (from detailed balance)
+K_n_i = K_p_i*ni^2;                     %Pseudo mass action constant (at equilibrium), for the Ii'/Iix mediated by electrons  K_n_i = [Iix]*n/[Ii'] = K_p_i*ni^2 (from detailed balance)
 
 %Psudo mass action constants associated with the redox with an iodide vacancy  
 K_p_v = sqrt(PI2_IP)/K_sg_v;                %Pseudo mass action constant (at equilibrium), for the VIx/VI mediated by holes K_p_v = [VI.]/p/[VIx] = [VI.]pI2^0.5/Kv/p
-K_n_v = K_p_v*ni^2;                     %Pseudo mass action constant (at equilibrium), for the VIx/VI mediated by electrons  K_n_v = [VI.]*n/[VIx] = [VI.]*n*pI2^0.5/Kv = KI_p_v*ni^2 (from detailed balance)
+K_n_v = K_p_v*ni^2;                     %Pseudo mass action constant (at equilibrium), for the VIx/VI mediated by electrons  K_n_v = [VI.]*n/[VIx] =  K_p_v*ni^2 (from detailed balance)
 
 vth = 1e7;                              %Electrons and holes thermal velocity
 
-Gamma_p_i = 1e11;                           %Hole trapping rate by an interstitial normalized by the radiative rate evaluated at equilibrium and at P(I2)i Gamma_p_i = kf_p_i*KaF^0.5/(krad*ni)
+Gamma_p_i = 1e-2;                           %Hole trapping rate by an interstitial normalized by the radiative rate evaluated at equilibrium and at P(I2)i Gamma_p_i = kf_p_i*KaF^0.5/(krad*ni)
 CrossSection_Iim_p = Gamma_p_i*krad*ni/vth/KaF^0.5;         %Reference value for the cross section related with capture of a hole by a Ii'
 CaptureCoeff_Iim_p = vth*CrossSection_Iim_p;
 
-Gamma_n_v = 1e11;                           %Electron trapping rate by vacancies normalized by the radiative rate evaluated at equilibrium and at P(I2)i Gamma_n_v = kf_p_v*Kv*P(I2)^-0.5/(krad*ni) 
+Gamma_n_v = 1e-2;                           %Electron trapping rate by vacancies normalized by the radiative rate evaluated at equilibrium and at P(I2)i Gamma_n_v = kf_p_v*Kv*P(I2)^-0.5/(krad*ni) 
 CrossSection_VIp_n = Gamma_n_v*krad*ni/vth/KaF^0.5;         %Reference value for the cross section realted with capture of an electron by a VI.
 CaptureCoeff_VIp_n = vth*CrossSection_VIp_n;
 
 %Gamma_I indicates the relative tendency of intestitials (i) or vacancies (v) to react with
 %holes (Gamma_I>>1) or electrons (Gamma_I<<1)
-Gamma_I_i = 1e3;                       %Ratio of the rates of Ii' oxidation due to hole capture vs electron release at P(I2)i at equilibrium Gamma_I_i = kf_p_i*ni/kf_n_i
-Gamma_I_v = 1e-3;                        %Ratio of the rates of VI. reduction due to hole release vs electron capture at P(I2)i at equilibrium Gamma_I_v = kf_p_v*ni/kf_n_v
+Gamma_I_i = 1e0;                       %Ratio of the rates of Ii' oxidation due to hole capture vs electron release at P(I2)i at equilibrium Gamma_I_i = kf_p_i*ni/kf_n_i
+Gamma_I_v = 1e0;                        %Ratio of the rates of VI. reduction due to hole release vs electron capture at P(I2)i at equilibrium Gamma_I_v = kf_p_v*ni/kf_n_v
 
 kf_p_i = CaptureCoeff_Iim_p;            %Rate constant for Ii' oxidation via hole (process i)
 kf_n_i = kf_p_i*ni*Gamma_I_i^-1;        %Rate constant for Ii' oxidation releasing an electron (process i)
